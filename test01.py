@@ -2,13 +2,9 @@ from utils import getlabeldict, cosinesimilarity
 import torch
 import numpy as np
 from torch.nn import functional as F
+from collections import OrderedDict,Counter
+from transformers import pipeline
 
-# test_dict = {"a": 1, "b": 2, "c": 3, "d": 4, "\u3000": 4}
-# print(test_dict['d'])
-# test_list2 = ['a','b','我']
-# bool1 = '我' in test_list2
-# str1 = 'abcd\u3000\u3000efg'
-# print(str1.split())
 # with open(r"data/vocab_dict.txt", "r", encoding="utf-8") as f:
 #     line = f.readline()
 #     line = line.strip().split()
@@ -27,7 +23,5 @@ from torch.nn import functional as F
 # print(sim)
 # sim_top = torch.argsort(sim, dim=1, descending=True).squeeze()
 # print(sim_top)
-a = ['a', 'b', 'c']
-test_list2 = [['a', 'b', '我']]
-bool1 = a in test_list2
-print(bool1)
+translate = pipeline('translation', model="Helsinki-NLP/opus-mt-fr-en")
+translate('Ce cours est produit par Hugging Face.')

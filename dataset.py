@@ -4,16 +4,19 @@ import utils
 import jieba
 import torch
 from tqdm import tqdm
+from collections import OrderedDict, Counter
 
 
 class MedicineDataset(Dataset):
-    def __init__(self, data_path):
+    def __init__(self, data_path, train=True):
         file = open(data_path, "r", encoding="utf-8")
         vocab_file = open(r"data/vocab_dict.txt", "r", encoding="utf-8")
         vocab_list = vocab_file.readline().split()
         lines = file.readlines()
         self.sentence_list = []
         self.label_list = []
+        self.train = train
+
         print("--loading data--")
         for data in tqdm(lines, file=sys.stdout):
             data = data.strip()
@@ -27,19 +30,30 @@ class MedicineDataset(Dataset):
             self.label_list.append(data[1])
         file.close()
         vocab_file.close()
-        self.sentence_list = list(set(tuple(sentence) for sentence in self.sentence_list))
+
         self.label_dict = utils.getlabeldict(r"data/name.txt")
         self.label_list_id = [int(self.label_dict[i]) for i in self.label_list]
+        self.sentence_list = [tuple(sentence) for sentence in self.sentence_list]
+        self.sentence_label_dict = dict(zip(self.sentence_list, self.label_list_id))
+        self.sentence_label_dict_keys, self.sentence_label_dict_values = list(self.sentence_label_dict.keys()), list(
+            self.sentence_label_dict.values())
 
     def __len__(self):
-        return len(self.sentence_list)
+        if self.train:
+            return len(self.sentence_label_dict_keys)
+        else:
+            return len(self.sentence_list)
 
     def __getitem__(self, item):
-        return torch.tensor(self.sentence_list[item]), torch.tensor(self.label_list_id[item])
+        if self.train:
+            return torch.tensor(list(self.sentence_label_dict_keys[item])), torch.tensor(
+                self.sentence_label_dict_values[item])
+        else:
+            return torch.tensor(self.sentence_list[item]), torch.tensor(self.label_list_id[item])
 
 
 if __name__ == '__main__':
-    dataset = MedicineDataset(r"data/test.txt")
+    dataset = MedicineDataset(r"data/test.txt", train=False)
     print(len(dataset))
     data, label = dataset[125]
     print(data, label)
@@ -47,4 +61,4 @@ if __name__ == '__main__':
     # print(label_dict)
     # vocab_file = open(r"data/vocab_dict.txt", "r", encoding="utf-8")
     # vocab_list = vocab_file.readline().split()
-    # print(vocab_list[1395],vocab_list[1396],vocab_list[110],vocab_list[2591])
+    # print(vocab_list[2332], vocab_list[318], vocab_list[109])
